@@ -106,31 +106,6 @@ local_src_files := \
 	asn1/x_val.c \
 	asn1/x_x509.c \
 	asn1/x_x509a.c \
-	engine/eng_all.c \
-	engine/eng_cnf.c \
-	engine/eng_cryptodev.c \
-	engine/eng_ctrl.c \
-	engine/eng_dyn.c \
-	engine/eng_err.c \
-	engine/eng_fat.c \
-	engine/eng_init.c \
-	engine/eng_lib.c \
-	engine/eng_list.c \
-	engine/eng_openssl.c \
-	engine/eng_pkey.c \
-	engine/eng_table.c \
-	engine/enginetest.c \
-	engine/tb_cipher.c \
-	engine/tb_dh.c \
-	engine/tb_digest.c \
-	engine/tb_dsa.c \
-	engine/tb_ecdh.c \
-	engine/tb_ecdsa.c \
-	engine/tb_rand.c \
-	engine/tb_rsa.c \
-	engine/tb_store.c \
-	engine/tb_asnmth.c \
-	engine/tb_pkmeth.c \
 	bf/bf_cfb64.c \
 	bf/bf_ecb.c \
 	bf/bf_enc.c \
@@ -409,7 +384,6 @@ local_src_files := \
 	rsa/rsa_asn1.c \
 	rsa/rsa_chk.c \
 	rsa/rsa_eay.c \
-	rsa/rsa_depr.c \
 	rsa/rsa_err.c \
 	rsa/rsa_gen.c \
 	rsa/rsa_lib.c \
@@ -497,15 +471,12 @@ local_src_files := \
 	x509v3/v3err.c
 
 local_c_includes := \
-	$(LOCAL_PATH)/../include \
-	$(LOCAL_PATH)/../include/openssl \
-	$(LOCAL_PATH)/../ \
-	$(LOCAL_PATH)/evp \
-	$(LOCAL_PATH)/engine \
- 	$(LOCAL_PATH)/../../zlib \
-	$(LOCAL_PATH)/asn1 \
-
-
+	external/openssl \
+	external/openssl/crypto/asn1 \
+	external/openssl/crypto/evp \
+	external/openssl/include \
+	external/openssl/include/openssl \
+	external/zlib
 
 local_c_flags := -DNO_WINDOWS_BRAINDEATH
 
@@ -534,3 +505,34 @@ endif
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE:= libcrypto
 include $(BUILD_SHARED_LIBRARY)
+
+#######################################
+# host shared library
+ifeq ($(WITH_HOST_DALVIK),true)
+    include $(CLEAR_VARS)
+    include $(LOCAL_PATH)/../android-config.mk
+    LOCAL_SRC_FILES += $(local_src_files)
+    LOCAL_CFLAGS += $(local_c_flags) -DPURIFY
+    LOCAL_C_INCLUDES += $(local_c_includes)
+    LOCAL_SRC_FILES += $(non_arm_src_files)
+    LOCAL_STATIC_LIBRARIES += libz
+    LOCAL_LDLIBS += -ldl
+    LOCAL_MODULE_TAGS := optional
+    LOCAL_MODULE:= libcrypto
+    include $(BUILD_HOST_SHARED_LIBRARY)
+endif
+
+########################################
+# host static library, which is used by some SDK tools.
+
+include $(CLEAR_VARS)
+include $(LOCAL_PATH)/../android-config.mk
+LOCAL_SRC_FILES += $(local_src_files)
+LOCAL_CFLAGS += $(local_c_flags) -DPURIFY
+LOCAL_C_INCLUDES += $(local_c_includes)
+LOCAL_SRC_FILES += $(non_arm_src_files)
+LOCAL_STATIC_LIBRARIES += libz
+LOCAL_LDLIBS += -ldl
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE:= libcrypto_static
+include $(BUILD_HOST_STATIC_LIBRARY)
